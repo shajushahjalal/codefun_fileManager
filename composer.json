@@ -1,0 +1,33 @@
+{
+    "name": "codefun/filemanager",
+    "description": "Laravel File Manager For Main All Types of file upload",
+    "require": {
+        "php": "^7.3|^8.0",
+        "intervention/image": "^3.3"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "APP\\" : "app/",
+            "Codefun\\FileManager\\": "src/"
+        }
+    },
+    "extra" : {
+        "laravel" : {
+            "providers": [
+                "Codefun\\FileManager\\App\\Providers\\FileManagerServiceProvider"
+            ],
+            "aliases": {
+                "FileManager": "CodeFun\\FileManager\\Facade\\FileManager"
+            }
+        } 
+    },
+    "authors": [
+        {
+            "name": "Shahjalal",
+            "email": "shahjalal.swe@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
