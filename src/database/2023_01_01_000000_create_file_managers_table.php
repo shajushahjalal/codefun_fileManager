@@ -22,6 +22,7 @@ class CreateFileManagersTable extends Migration
             $table->string("size");
             $table->string("file_url");
             $table->boolean("is_profile_pic")->default(false);
+            $table->boolean("is_cover_pic")->default(false);
             $table->unsignedBigInteger("causarable_id")->nullable();
             $table->string("causarable")->nullable();
             $table->timestamps();

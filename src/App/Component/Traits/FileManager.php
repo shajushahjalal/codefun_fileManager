@@ -8,7 +8,7 @@ trait FileManager{
     /**
      * Autoload
      */
-    public function bootFileManager(){
+    public static function bootFileManager(){
 
     }
 
@@ -25,5 +25,13 @@ trait FileManager{
     public function profilePic(){
         return $this->morphMany(ModelsFileManager::class, __FUNCTION__, "tableable", "tableable_id")
             ->where("is_profile_pic", true);
+    }
+
+    /**
+     * get Profile Pic
+     */
+    public function coverPic(){
+        return $this->morphMany(ModelsFileManager::class, __FUNCTION__, "tableable", "tableable_id")
+            ->where("is_cover_pic", true);
     }
 }

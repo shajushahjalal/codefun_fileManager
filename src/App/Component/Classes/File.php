@@ -2,52 +2,38 @@
 
 namespace Codefun\FileManager\App\Component\Classes;
 
-use Codefun\FileManager\App\Models\FileManager;
 use Exception;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Intervention\Image\Facades\Image;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Intervention\Image\ImageManager;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Drivers\Gd\Driver;
+use Codefun\FileManager\App\Models\FileManager;
 
-class File{
-
+class FileUpload{
     /**
      * Mix Variables
      */
-    private $disk;
+    private $disk = "";
     private $dir = "";
     private $width;
     private $height;
     private $model;
     private $request;
+    private $is_cover_pic = false;
     private $is_profile_pic = false;
     private $deletable_file_ids = [];
 
-    /**
-     * Inject Request
-     */
     function __construct(Request $request)
     {
         $this->request = $request;
-        $this->disk = "public";
         ini_set('memory_limit', '1024M');
-        $this->createStorageIfNotExists();
+        $this->disk = "public";
+        $this->generateStorageSymlinkIfNotExists();
     }
-
-    /**
-     * Create Storage Simlink Where Storage Folder Dosen't Exists in Public folder
-     */
-    private function createStorageIfNotExists(){
-        $dir = base_path().'/public/storage';
-        if( !is_dir($dir) ){
-            Artisan::call("storage:link");
-        }
-    }
-
 
     /**
      * Set Storege Disk
@@ -57,19 +43,16 @@ class File{
         return $this;
     }
 
-    /**
-     * Set Request
-     */
-    public function request($request){
-        $this->request = $request;
-        return $this;
+    protected function generateStorageSymlinkIfNotExists(){
+        if( !is_dir(base_path("public")."/storage") ){
+            Artisan::call("storage:link");
+        }
     }
 
     /**
      * Set Target Model Class
-     * @param Model
      */
-    public function model(Model $model){
+    public function model($model){
         $this->model = $model;
         return $this;
     }
@@ -116,6 +99,14 @@ class File{
     }
 
      /**
+     * Set Image as ProCoverfile Pic
+     */
+    public function coverPic($_is_cover_pic = true){
+        $this->is_cover_pic = $_is_cover_pic;
+        return $this;
+    }
+
+    /**
      * Set Image as Profile Pic
      */
     public function profilePic($_is_profile_pic = true){
@@ -142,25 +133,26 @@ class File{
      * Send the null value in height or width to keep the Image Orginal Ratio.
      * ---------------------------------------------
      */
-    public function upload($request, $fileName, $width = null, $height =  null){
+    public function upload($fileName, $width = null, $height =  null){
         try{
-            if( !$request->hasFile($fileName) ){
-                throw new Exception("No File Selected", 404);
+
+            if( !$this->request->hasFile($fileName) ){
+                throw new Exception("File Not Found", 404);
             }
             if(empty($this->model)){
                 throw new Exception("Model Not Found", 404);
             }
-            // $this->request($request);
+
             $this->width = $width;
             $this->height = $height;
 
-            if(is_array($request->$fileName) ){
-                foreach($request->$fileName as $key => $file){
-                    $file = $request->file($fileName)[$key];
+            if(is_array($this->request->$fileName) ){
+                foreach($this->request->$fileName as $key => $file){
+                    $file = $this->request->file($fileName)[$key];
                     $this->saveFile($file);
                 }
             }else{
-                $file = $request->file($fileName);
+                $file = $this->request->file($fileName);
                 $this->saveFile($file);            
             }
             return ["status" => true, "message" => "File Save Successfully!"];
@@ -173,6 +165,7 @@ class File{
      * Save File
      */
     protected function saveFile($file){
+        $imgManager = new ImageManager(new Driver());
         $filename = Str::random(16).time().'.'.$file->getClientOriginalExtension();
         $dir = empty($this->dir) ? "images/" : trim($this->dir, "/"). "/";
         $this->checkDir($dir);
@@ -180,22 +173,23 @@ class File{
 
         if( $this->isImage($filename) ){
             if( empty($this->height) && empty($this->width)){
-                Image::make($file)->save($path);
+                $imgManager->read($file)->save($path);
             }
             elseif( empty($this->height) && !empty($this->width) ){
-                Image::make($file)->resize($this->width, null, function($constant){
+                $imgManager->read($file)->resize($this->width, null, function($constant){
                     $constant->aspectRatio();
                 })->save($path);
             }
             elseif( !empty($this->height) && empty($this->width) ){
-                Image::make($file)->resize(null, $this->height, function($constant){
+                $imgManager->read($file)->resize(null, $this->height, function($constant){
                     $constant->aspectRatio();
                 })->save($path);
             }
             else{
-                Image::make($file)->resize($this->width, $this->height)->save($path);
+                $imgManager->read($file)->resize($this->width, $this->height)->save($path);
             }
         }else{
+            $dir = 
             $path = "storage/".Storage::disk($this->disk)->putFile($this->dir, $file);
         }
 
@@ -221,23 +215,52 @@ class File{
     /**
      * Store File Info Into DB
      */
-    protected function updateFileManager($file_url){
+    private function updateFileManager($file_url){
         $file = new FileManager();
+        $file->uuid         = Str::uuid();
         $file->tableable_type= $this->model->getMorphClass();
-        $file->tableable_id =  $this->model->id;
+        $file->tableable_id = $this->model->id;
         $file->mime_type    = pathinfo($file_url, PATHINFO_EXTENSION);
         $file->size         = is_int(filesize($file_url)) ? filesize($file_url) / 1024 : 0;
         $file->file_url     = $file_url;
+        $file->is_cover_pic = $this->is_cover_pic;
         $file->is_profile_pic= $this->is_profile_pic;
 
-        if( isset(Auth::user()->id) ){
-            $file->causarable_id= Auth::user()->id;
-            $file->causarable   = Auth::user()->getMorphClass();
+        if( !empty($this->request->user()) ){
+            $file->causarable_id= $this->request->user()->id;
+            $file->causarable   = $this->request->user()->getMorphClass();
+        }else{
+            $file->causarable_id= $this->model->id;
+            $file->causarable   = $this->model->getMorphClass();
         }
         $file->save();
 
         if( count($this->deletable_file_ids) > 0 ){
             $this->deleteFiles();
+        }
+    }
+
+    /**
+     * Set Cover Pic
+     */
+    public function setcoverPic(){
+        try{
+            if(empty($this->model)){
+                throw new Exception("Model Not Found", 404);
+            }
+            DB::beginTransaction();
+            FileManager::where("tableable_type", $this->model->getMorphClass())
+                ->where("id", "!=", $this->model->id)
+                ->update([ "is_cover_pic"    => false ]);
+
+            FileManager::where("tableable_type", $this->model->getMorphClass())
+                ->where("id", $this->model->id)
+                ->update(["is_cover_pic"    => true ]);
+            DB::commit();
+            return ["status" => true, "message" => "Cover Picture Set Successfully!"];
+        }catch(Exception $e){
+            DB::rollBack();
+            return ["status" => false, "message" => $e->getMessage().' on '. $e->getFile() . ':'.$e->getLine()]; 
         }
     }
 
@@ -281,8 +304,8 @@ class File{
             FileManager::where("tableable", $this->model->getMorphClass())
             ->where("tableable_id", $this->model->id)
             ->update([
-                "causarable_id" => Auth::user()->id ?? null,
-                "causarable"    => Auth::user()->getMorphClass() ?? null,
+                "causarable_id" => $this->request->user()->id,
+                "causarable"    => $this->request->user()->getMorphClass(),
             ]);
         }
         FileManager::where("tableable", $this->model->getMorphClass())
