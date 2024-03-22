@@ -23,8 +23,8 @@ class File{
     private $height;
     private $model;
     private $request;
-    private $is_cover_pic = false;
-    private $is_profile_pic = false;
+    private $is_cover_pic;
+    private $is_profile_pic;
     private $deletable_file_ids = [];
 
     function __construct(Request $request)
@@ -32,6 +32,8 @@ class File{
         $this->request = $request;
         ini_set('memory_limit', '1024M');
         $this->disk = "public";
+        $this->is_cover_pic = false;
+        $this->is_profile_pic = false;
         $this->generateStorageSymlinkIfNotExists();
     }
 
