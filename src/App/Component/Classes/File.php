@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver;
 use Codefun\FileManager\App\Models\FileManager;
 
-class FileUpload{
+class File{
     /**
      * Mix Variables
      */
