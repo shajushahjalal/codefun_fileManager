@@ -27,7 +27,7 @@ class FileManagerServiceProvider extends ServiceProvider
          * Published Files
          */
         $this->publishes([
-            __DIR__.'/../../database/migrations' => database_path('2023_01_01_000000_create_file_managers_table.php'),
+            __DIR__.'/../../database/migrations' => database_path('migrations'),
 
         ], "codefun_fileManager_migration");
         
