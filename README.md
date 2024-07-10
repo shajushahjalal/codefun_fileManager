@@ -5,6 +5,7 @@
 # Installation Process
 
 * ```composer require codefun/filemanager```
+* ```php artisan vendor:publish --tag=codefun_fileManager_migration```
 * ```php artisan migrate``` 
 
 ## Before Laravel 5.7 
