@@ -163,6 +163,30 @@ class File{
         }
     }
 
+    /*
+     * ---------------------------------------------
+     * Direct Upload Single File
+     * ---------------------------------------------
+     */
+    public function directUpload($file, $width = null, $height =  null){
+        try{
+            if( empty($file) ){
+                throw new Exception("File Not Found", 404);
+            }
+            if(empty($this->model)){
+                throw new Exception("Model Not Found", 404);
+            }
+
+            $this->width = $width;
+            $this->height = $height;
+
+            $this->saveFile($file);
+            return ["status" => true, "message" => "File Save Successfully!"];
+        }catch(Exception $e){
+            return ["status" => false, "message" => $e->getMessage().' on '. $e->getFile() . ':'.$e->getLine()]; 
+        }
+    }
+
     /**
      * Save File
      */
