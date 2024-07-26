@@ -25,12 +25,13 @@ then add This alias into _**alias**_ array on ```config\app.php```:
 In your method Just Use it 
 Available methods
 ```
-FileManager::upload($fileName, $width = null, $height =  null);
+$user = User::find($id);
+FileManager::model($user)->upload($fileName, $width = null, $height =  null);
 FileManager::coverPic()->upload($fileName, $width = null, $height =  null);
 FileManager::profilePic()->upload($fileName, $width = null, $height =  null);
 FileManager::deleteAll(Model $model);
-FileManager::delete(array | string $deleteAbleFileId);
-FileManager::update(array | string $updateAbleFileId)->upload($fileName, $width = null, $height =  null);
+FileManager::model($user)->delete(array | string $deleteAbleFileId);
+FileManager::model($user)->update(array | string $updateAbleFileId)->upload($fileName, $width = null, $height =  null);
 ```
 
 Go to your Model and use the trait file: 
@@ -41,11 +42,17 @@ class AnyModel extends Model
     use FileManager;
 }
 ```
-# Retrive Multiple Uploaded Files
+# Retrive Multiple Uploaded Files without cover & profice pic
 
 ``` 
 $user = User::find(1);
 $user->files() [ This Method Return File List(Array List)]
+
+```
+# Retrive All Uploaded Files
+``` 
+$user = User::find(1);
+$user->allFiles() [ This Method Return File List(Array List)]
 
 ```
 # Retrive profile Pic
