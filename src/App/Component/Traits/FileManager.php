@@ -13,9 +13,17 @@ trait FileManager{
     }
 
     /**
-     * get All Files
+     * get Files
      */
     public function files(){
+        return $this->morphMany(ModelsFileManager::class, __FUNCTION__, "tableable_type", "tableable_id")
+            ->where("is_profile_pic", false)->where("is_cover_pic", false);
+    }
+
+    /**
+     * get All Files
+     */
+    public function allFiles(){
         return $this->morphMany(ModelsFileManager::class, __FUNCTION__, "tableable_type", "tableable_id");
     }
 

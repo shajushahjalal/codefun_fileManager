@@ -5,6 +5,7 @@
 # Installation Process
 
 * ```composer require codefun/filemanager```
+* ```php artisan vendor:publish --tag=codefun_fileManager_migration```
 * ```php artisan migrate``` 
 
 ## Before Laravel 5.7 
@@ -22,8 +23,14 @@ then add This alias into _**alias**_ array on ```config\app.php```:
 
 # How To Upload File?
 In your method Just Use it 
+Available methods
 ```
-FileManager::upload();
+FileManager::upload($fileName, $width = null, $height =  null);
+FileManager::coverPic()->upload($fileName, $width = null, $height =  null);
+FileManager::profilePic()->upload($fileName, $width = null, $height =  null);
+FileManager::deleteAll(Model $model);
+FileManager::delete(array | string $deleteAbleFileId);
+FileManager::update(array | string $updateAbleFileId)->upload($fileName, $width = null, $height =  null);
 ```
 
 Go to your Model and use the trait file: 

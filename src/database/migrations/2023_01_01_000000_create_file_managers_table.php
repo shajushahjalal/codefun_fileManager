@@ -16,7 +16,7 @@ class CreateFileManagersTable extends Migration
         Schema::create('file_managers', function (Blueprint $table) {
             $table->id();
             $table->string("uuid");
-            $table->string("tableable");
+            $table->string("tableable_type");
             $table->unsignedBigInteger("tableable_id");
             $table->string("mime_type");
             $table->string("size");
